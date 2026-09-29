@@ -419,7 +419,11 @@ function blg_shortcode_display( $atts ) {
                         <div class="popup-title"><?php echo esc_html( $title ); ?></div>
 
                         <div class="popup-text">
-                            <?php echo wp_kses_post( wpautop( do_shortcode( $description ) ) ); ?>
+                            <?php
+                            // Filter the stored description before expanding shortcodes: filtering afterwards
+                            // would strip <source>/<iframe> from core audio, video and embed shortcode output.
+                            echo wpautop( do_shortcode( wp_kses_post( $description ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            ?>
                         </div>
 
                         <div class="popup-attachments">
