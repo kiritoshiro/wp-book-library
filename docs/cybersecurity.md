@@ -51,4 +51,4 @@ visibility. No visibility changes are part of this rollout.
 
 ## Public repository update — 2026-09-29
 
-Visibility verified public. Heavy Trivy and WordPress security checks now run on every PR, default-branch push, weekly schedule and manual run. CodeQL JavaScript analysis is enabled. Earlier private-only cadence descriptions are superseded by this section. Narrow PHPCS annotations document reviewed validation/output boundaries; maintainer review due 2026-12-29 or when the annotated code changes.
+Visibility verified public. Heavy Trivy and WordPress security checks now run on every PR, default-branch push, weekly schedule and manual run. CodeQL was tested but cannot extract this repository's JavaScript embedded inside PHP templates; it has no PHP support, so the inapplicable job is omitted. Semgrep, PHPCS, Trivy and secret/workflow checks remain enforced. Earlier private-only cadence descriptions are superseded by this section. Narrow PHPCS annotations document reviewed validation/output boundaries; maintainer review due 2026-12-29 or when the annotated code changes.
