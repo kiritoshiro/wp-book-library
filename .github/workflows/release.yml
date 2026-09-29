@@ -1,0 +1,66 @@
+name: Build plugin release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (for example v2.0.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate version
+        env:
+          RELEASE_TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          set -eu
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            tag="$RELEASE_TAG_INPUT"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+          version="$(printf '%s' "$tag" | sed 's/^v//')"
+          header_version="$(sed -n 's/^Version: //p' book-library-grid/book-library-grid.php | head -n 1)"
+          updater_version="$(sed -n "s/^[[:space:]]*define( 'BLG_PLUGIN_VERSION', '\([^']*\)' );/\1/p" book-library-grid/updater.php | head -n 1)"
+          stable_tag="$(sed -n 's/^Stable tag: //p' book-library-grid/readme.txt | head -n 1)"
+          [ "$tag" = "v$version" ] || { echo "Use a v-prefixed version tag."; exit 1; }
+          [ "$version" = "$header_version" ] || { echo "Tag and plugin header versions differ."; exit 1; }
+          [ "$version" = "$updater_version" ] || { echo "Plugin header and updater versions differ."; exit 1; }
+          [ "$version" = "$stable_tag" ] || { echo "Plugin header and Stable tag versions differ."; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Package plugin
+        run: |
+          set -eu
+          rm -rf build book-library-grid.zip
+          mkdir -p build/book-library-grid
+          cp book-library-grid/book-library-grid.php book-library-grid/updater.php book-library-grid/readme.txt build/book-library-grid/
+          (cd build && zip -qr ../book-library-grid.zip book-library-grid)
+
+      - name: Publish GitHub release
+        env:
+          RELEASE_TAG_INPUT: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          tag="$GITHUB_REF_NAME"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            tag="$RELEASE_TAG_INPUT"
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" book-library-grid.zip --clobber
+          else
+            gh release create "$tag" book-library-grid.zip --title "$tag" --generate-notes
+          fi
