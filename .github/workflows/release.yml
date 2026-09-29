@@ -32,9 +32,9 @@ jobs:
             tag="$GITHUB_REF_NAME"
           fi
           version="$(printf '%s' "$tag" | sed 's/^v//')"
-          header_version="$(sed -n 's/^Version: //p' book-library-grid/book-library-grid.php | head -n 1)"
+          header_version="$(sed -n 's/^Version: //p' book-library-grid/book-library-grid.php | tr -d '\r' | head -n 1)"
           updater_version="$(sed -n "s/^[[:space:]]*define( 'BLG_PLUGIN_VERSION', '\([^']*\)' );/\1/p" book-library-grid/updater.php | head -n 1)"
-          stable_tag="$(sed -n 's/^Stable tag: //p' book-library-grid/readme.txt | head -n 1)"
+          stable_tag="$(sed -n 's/^Stable tag: //p' book-library-grid/readme.txt | tr -d '\r' | head -n 1)"
           [ "$tag" = "v$version" ] || { echo "Use a v-prefixed version tag."; exit 1; }
           [ "$version" = "$header_version" ] || { echo "Tag and plugin header versions differ."; exit 1; }
           [ "$version" = "$updater_version" ] || { echo "Plugin header and updater versions differ."; exit 1; }
