@@ -1,0 +1,10 @@
+{
+  "category": "WordPress plugin",
+  "source_paths": [
+    "book-library-grid"
+  ],
+  "semgrep_rules": [
+    "p/php",
+    "p/javascript"
+  ]
+}
