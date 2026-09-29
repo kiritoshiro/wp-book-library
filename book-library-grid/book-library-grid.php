@@ -30,7 +30,7 @@ function blg_register_book_post_type() {
 
     $args = array(
         'labels'              => $labels,
-        'public'              => false, 
+        'public'              => false,
         'show_ui'             => true,
         'show_in_menu'        => true,
         'menu_icon'           => 'dashicons-book',
@@ -71,24 +71,24 @@ function blg_render_meta_box( $post ) {
     // Retrieve data
     $main_link = get_post_meta( $post->ID, '_blg_main_link', true );
     $custom_cover = get_post_meta( $post->ID, '_blg_custom_cover', true );
-    
+
     $audios = get_post_meta( $post->ID, '_blg_audios', true );
     if ( ! is_array( $audios ) ) $audios = array();
 
     $pdfs = get_post_meta( $post->ID, '_blg_pdfs', true );
     if ( ! is_array( $pdfs ) ) $pdfs = array();
     ?>
-    
+
     <style>
         .blg-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; background: #fff; }
         .blg-section h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .blg-row { margin-bottom: 10px; }
         .blg-input { width: 100%; max-width: 400px; }
-        
+
         .repeater-item { background: #f1f1f1; padding: 15px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 4px; position: relative; }
         .repeater-item h4 { margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: #666; }
         .remove-row { position: absolute; top: 10px; right: 10px; color: #a00; text-decoration: none; cursor: pointer; }
-        
+
         .preview-img { max-width: 60px; max-height: 60px; display: block; margin-top: 5px; border: 1px solid #ddd; }
         .btn-width { width: auto; }
         .field-group { margin-bottom: 8px; }
@@ -98,7 +98,7 @@ function blg_render_meta_box( $post ) {
     <!-- General Settings -->
     <div class="blg-section">
         <h3>General Settings</h3>
-        
+
         <div class="blg-row">
             <label><strong>Main Book Link (Where the "Read Book" button goes):</strong></label><br>
             <input type="text" name="blg_main_link" class="blg-input file-url-input" value="<?php echo esc_attr( $main_link ); ?>">
@@ -118,7 +118,7 @@ function blg_render_meta_box( $post ) {
     <div class="blg-section">
         <h3>Audio Tracks</h3>
         <div id="audio-container">
-            <?php foreach ( $audios as $index => $audio ) : 
+            <?php foreach ( $audios as $index => $audio ) :
                 blg_render_audio_row( $index, $audio );
             endforeach; ?>
         </div>
@@ -129,7 +129,7 @@ function blg_render_meta_box( $post ) {
     <div class="blg-section">
         <h3>PDF Books / Attachments</h3>
         <div id="pdf-container">
-            <?php foreach ( $pdfs as $index => $pdf ) : 
+            <?php foreach ( $pdfs as $index => $pdf ) :
                 blg_render_pdf_row( $index, $pdf );
             endforeach; ?>
         </div>
@@ -155,21 +155,21 @@ function blg_render_audio_row( $index, $data ) {
     <div class="repeater-item">
         <h4>Audio Track</h4>
         <a href="#" class="remove-row">Remove</a>
-        
+
         <div class="field-group">
             <label>Track Label (e.g., "Part 1"):</label>
-            <input type="text" name="blg_audios[<?php echo $index; ?>][label]" class="widefat" value="<?php echo esc_attr($label); ?>">
+            <input type="text" name="blg_audios[<?php echo esc_attr( $index ); ?>][label]" class="widefat" value="<?php echo esc_attr($label); ?>">
         </div>
 
         <div class="field-group">
             <label>Audio File URL:</label>
-            <input type="text" name="blg_audios[<?php echo $index; ?>][url]" class="widefat file-url-input" value="<?php echo esc_attr($url); ?>" style="width:75%">
+            <input type="text" name="blg_audios[<?php echo esc_attr( $index ); ?>][url]" class="widefat file-url-input" value="<?php echo esc_attr($url); ?>" style="width:75%">
             <button type="button" class="button upload-audio-btn">Select Audio</button>
         </div>
 
         <div class="field-group">
             <label>Link to Post (Redirects user when clicked):</label>
-            <input type="text" name="blg_audios[<?php echo $index; ?>][post_url]" class="widefat" value="<?php echo esc_attr($post_url); ?>">
+            <input type="text" name="blg_audios[<?php echo esc_attr( $index ); ?>][post_url]" class="widefat" value="<?php echo esc_attr($post_url); ?>">
         </div>
     </div>
     <?php
@@ -184,21 +184,21 @@ function blg_render_pdf_row( $index, $data ) {
     <div class="repeater-item">
         <h4>PDF Item</h4>
         <a href="#" class="remove-row">Remove</a>
-        
+
         <div class="field-group">
             <label>PDF File URL (Download Link):</label>
-            <input type="text" name="blg_pdfs[<?php echo $index; ?>][url]" class="widefat file-url-input" value="<?php echo esc_attr($url); ?>" style="width:75%">
+            <input type="text" name="blg_pdfs[<?php echo esc_attr( $index ); ?>][url]" class="widefat file-url-input" value="<?php echo esc_attr($url); ?>" style="width:75%">
             <button type="button" class="button upload-file-btn">Select PDF</button>
         </div>
 
         <div class="field-group">
             <label>Link to Post (Where clicking the image takes you):</label>
-            <input type="text" name="blg_pdfs[<?php echo $index; ?>][post_url]" class="widefat" value="<?php echo esc_attr($post_url); ?>">
+            <input type="text" name="blg_pdfs[<?php echo esc_attr( $index ); ?>][post_url]" class="widefat" value="<?php echo esc_attr($post_url); ?>">
         </div>
 
         <div class="field-group">
             <label>Custom Image/Icon:</label>
-            <input type="text" name="blg_pdfs[<?php echo $index; ?>][image]" class="widefat image-url-input" value="<?php echo esc_attr($image); ?>" style="width:75%">
+            <input type="text" name="blg_pdfs[<?php echo esc_attr( $index ); ?>][image]" class="widefat image-url-input" value="<?php echo esc_attr($image); ?>" style="width:75%">
             <button type="button" class="button upload-image-btn">Select Image</button>
             <img src="<?php echo esc_url($image); ?>" class="preview-img" style="<?php echo $image ? '' : 'display:none;'; ?>">
         </div>
@@ -213,7 +213,7 @@ function blg_print_admin_js() {
     ?>
     <script>
     jQuery(document).ready(function($) {
-        
+
         // --- Repeater Logic ---
         var audioCount = 1000;
         var pdfCount   = 1000;
@@ -234,13 +234,13 @@ function blg_print_admin_js() {
         });
 
         // --- Media Uploader Logic ---
-        
+
         // 1. Generic File/Link Uploader (PDFs, Main Link)
         $(document).on('click', '.upload-file-btn', function(e) {
             e.preventDefault();
             var btn = $(this);
             var input = btn.prev('.file-url-input');
-            
+
             var frame = wp.media({
                 title: 'Select File',
                 multiple: false
@@ -258,7 +258,7 @@ function blg_print_admin_js() {
             e.preventDefault();
             var btn = $(this);
             var input = btn.prev('.file-url-input');
-            
+
             var frame = wp.media({
                 title: 'Select Audio File',
                 library: { type: 'audio' },
@@ -303,23 +303,26 @@ function blg_print_admin_js() {
  * 5. Save Data
  */
 function blg_save_book_data( $post_id ) {
-    if ( ! isset( $_POST['blg_book_nonce'] ) || ! wp_verify_nonce( $_POST['blg_book_nonce'], 'blg_save_book_data' ) ) return;
+    if ( ! isset( $_POST['blg_book_nonce'] ) || ! is_string( $_POST['blg_book_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['blg_book_nonce'] ) ), 'blg_save_book_data' ) ) return;
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
     // Simple fields
-    if ( isset( $_POST['blg_main_link'] ) ) update_post_meta( $post_id, '_blg_main_link', sanitize_text_field( $_POST['blg_main_link'] ) );
-    if ( isset( $_POST['blg_custom_cover'] ) ) update_post_meta( $post_id, '_blg_custom_cover', sanitize_text_field( $_POST['blg_custom_cover'] ) );
+    if ( isset( $_POST['blg_main_link'] ) && is_string( $_POST['blg_main_link'] ) ) update_post_meta( $post_id, '_blg_main_link', esc_url_raw( wp_unslash( $_POST['blg_main_link'] ) ) );
+    if ( isset( $_POST['blg_custom_cover'] ) && is_string( $_POST['blg_custom_cover'] ) ) update_post_meta( $post_id, '_blg_custom_cover', esc_url_raw( wp_unslash( $_POST['blg_custom_cover'] ) ) );
 
     // Save Audios
     if ( isset( $_POST['blg_audios'] ) && is_array( $_POST['blg_audios'] ) ) {
         $clean_audios = array();
-        foreach ( $_POST['blg_audios'] as $item ) {
+        // Each row is type-checked and its fields sanitized below.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        foreach ( wp_unslash( $_POST['blg_audios'] ) as $item ) {
+            if ( ! is_array( $item ) ) continue;
             if ( ! empty( $item['url'] ) || ! empty( $item['post_url'] ) ) {
                 $clean_audios[] = array(
-                    'label'    => sanitize_text_field( $item['label'] ),
-                    'url'      => sanitize_text_field( $item['url'] ),
-                    'post_url' => sanitize_text_field( $item['post_url'] ),
+                    'label'    => sanitize_text_field( is_string( $item['label'] ?? null ) ? $item['label'] : '' ),
+                    'url'      => esc_url_raw( is_string( $item['url'] ?? null ) ? $item['url'] : '' ),
+                    'post_url' => esc_url_raw( is_string( $item['post_url'] ?? null ) ? $item['post_url'] : '' ),
                 );
             }
         }
@@ -331,12 +334,15 @@ function blg_save_book_data( $post_id ) {
     // Save PDFs
     if ( isset( $_POST['blg_pdfs'] ) && is_array( $_POST['blg_pdfs'] ) ) {
         $clean_pdfs = array();
-        foreach ( $_POST['blg_pdfs'] as $item ) {
+        // Each row is type-checked and its fields sanitized below.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        foreach ( wp_unslash( $_POST['blg_pdfs'] ) as $item ) {
+            if ( ! is_array( $item ) ) continue;
             if ( ! empty( $item['url'] ) || ! empty( $item['post_url'] ) ) {
                 $clean_pdfs[] = array(
-                    'url'      => sanitize_text_field( $item['url'] ),
-                    'post_url' => sanitize_text_field( $item['post_url'] ),
-                    'image'    => sanitize_text_field( $item['image'] ),
+                    'url'      => esc_url_raw( is_string( $item['url'] ?? null ) ? $item['url'] : '' ),
+                    'post_url' => esc_url_raw( is_string( $item['post_url'] ?? null ) ? $item['post_url'] : '' ),
+                    'image'    => esc_url_raw( is_string( $item['image'] ?? null ) ? $item['image'] : '' ),
                 );
             }
         }
@@ -362,18 +368,18 @@ function blg_shortcode_display( $atts ) {
 
     if ( $query->have_posts() ) {
         echo '<div class="book-grid">';
-        
+
         while ( $query->have_posts() ) {
             $query->the_post();
             $post_id = get_the_ID();
             $title = get_the_title();
             $description = get_the_content();
-            
+
             // Get Meta
             $main_link    = get_post_meta( $post_id, '_blg_main_link', true );
             $custom_cover = get_post_meta( $post_id, '_blg_custom_cover', true );
             $feat_img     = get_the_post_thumbnail_url( $post_id, 'full' );
-            
+
             // Determine Cover Image: Custom > Featured > Placeholder
             $cover_url = $custom_cover ? $custom_cover : $feat_img;
 
@@ -411,17 +417,17 @@ function blg_shortcode_display( $atts ) {
                     <!-- Right: Description & Attachments -->
                     <div class="popup-description">
                         <div class="popup-title"><?php echo esc_html( $title ); ?></div>
-                        
+
                         <div class="popup-text">
-                            <?php echo wpautop( do_shortcode( $description ) ); ?>
+                            <?php echo wp_kses_post( wpautop( do_shortcode( $description ) ) ); ?>
                         </div>
 
                         <div class="popup-attachments">
-                            
+
                             <!-- PDF List -->
                             <?php if ( ! empty( $pdfs ) ) : ?>
                                 <div class="attach-group">
-                                    <?php foreach ( $pdfs as $pdf ) : 
+                                    <?php foreach ( $pdfs as $pdf ) :
                                         // Priority: Post URL > File URL
                                         $link_target = !empty($pdf['post_url']) ? $pdf['post_url'] : $pdf['url'];
                                         $img_src     = !empty($pdf['image']) ? $pdf['image'] : plugin_dir_url(__FILE__).'default-pdf.png';
@@ -442,7 +448,7 @@ function blg_shortcode_display( $atts ) {
                             <!-- Audio List -->
                             <?php if ( ! empty( $audios ) ) : ?>
                                 <div class="attach-group">
-                                    <?php foreach ( $audios as $audio ) : 
+                                    <?php foreach ( $audios as $audio ) :
                                         // Priority: Post URL > File URL
                                         $a_link = !empty($audio['post_url']) ? $audio['post_url'] : $audio['url'];
                                         $label  = !empty($audio['label']) ? $audio['label'] : 'Audio';
@@ -488,7 +494,7 @@ function blg_enqueue_assets() {
     <style>
         html { scroll-behavior: smooth; }
         .book-grid { display: flex; flex-wrap: wrap; justify-content: flex-start; margin: 0 -1em; }
-        
+
         .book-item {
             flex: 0 0 calc(25% - 2em); /* 4 per row */
             margin: 1em;
@@ -512,7 +518,7 @@ function blg_enqueue_assets() {
         }
         .popup:target { display: flex; justify-content: center; align-items: center; }
         .popup-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1001; }
-        
+
         .popup-content {
             display: flex; flex-direction: row; align-items: flex-start;
             background: white; padding: 30px; border-radius: 5px;
@@ -522,25 +528,25 @@ function blg_enqueue_assets() {
 
         .popup-img { flex: 0 0 40%; margin-right: 30px; text-decoration: none; border: 0; }
         .popup-img img { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        
+
         .popup-description { flex: 1; }
         .popup-title { font-size: 24px; color: #333; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .popup-text { line-height: 1.6; color: #444; margin-bottom: 20px; }
-        
+
         .close { position: absolute; top: 10px; right: 20px; text-decoration: none; font-size: 30px; color: #333; z-index: 1005; }
-        
+
         /* Attachments */
         .attach-group { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
-        
+
         .attachment-icon {
-            display: flex; flex-direction: column; align-items: center; 
+            display: flex; flex-direction: column; align-items: center;
             text-decoration: none; color: #333; font-size: 11px; text-align: center;
-            width: 80px; 
+            width: 80px;
         }
         .attachment-icon:hover { opacity: 0.7; }
         .attachment-icon img { width: 100%; height: auto; margin-bottom: 5px; border-radius: 3px; }
         .text-icon { display:block; padding: 15px; background: #eee; border-radius: 4px; font-weight: bold; width: 100%; box-sizing: border-box; }
-        
+
         .audio-icon { width: auto; min-width: 60px; }
         .audio-icon svg { color: #555; margin-bottom: 2px; }
 
