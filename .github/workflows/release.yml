@@ -12,16 +12,26 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  # The whole security gate must pass on the tagged commit before the ZIP is
+  # built and published.
+  security-gate:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/security-gate.yml
   release:
+    permissions:
+      contents: write
+    needs: security-gate
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Validate version
         env:
@@ -32,6 +42,10 @@ jobs:
             tag="$RELEASE_TAG_INPUT"
           else
             tag="$GITHUB_REF_NAME"
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            git check-ref-format "refs/tags/$tag"
+            test "$(git rev-parse "refs/tags/$tag^{commit}")" = "$GITHUB_SHA" || { echo "Select the release tag as the workflow ref; its commit must match the scanned checkout."; exit 1; }
           fi
           version="$(printf '%s' "$tag" | sed 's/^v//')"
           header_version="$(sed -n 's/^Version: //p' book-library-grid/book-library-grid.php | tr -d '\r' | head -n 1)"
