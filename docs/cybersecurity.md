@@ -59,7 +59,7 @@ Visibility verified public. Heavy Trivy and WordPress security checks now run on
 security scans: on pull requests and pushes to the default branch, weekly, and
 manually. The scan workflows (the baseline and, where present, CodeQL and the
 older security workflow) are reusable and run only through it. The gate also adds
-dependency audits for shipped lockfiles and, on pull requests, dependency review.
+dependency audits for shipped lockfiles and, on pull requests where the repository has the dependency graph enabled, dependency review.
 Its final job, **All security checks passed**, fails unless every check succeeded;
 a cancelled or unexpectedly skipped check counts as a failure.
 

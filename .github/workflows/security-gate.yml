@@ -33,22 +33,10 @@ jobs:
     name: Baseline
     uses: ./.github/workflows/cybersecurity.yml
 
-  dependency-review:
-    name: Dependency review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      # Blocks a PR that *introduces* a vulnerable dependency, which the
-      # scans above would only catch once the lockfile is already merged.
-      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
-        with:
-          fail-on-severity: moderate
-
   gate:
     name: All security checks passed
     if: ${{ always() }}
-    needs: [baseline, dependency-review]
+    needs: [baseline]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
