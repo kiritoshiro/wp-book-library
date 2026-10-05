@@ -13,7 +13,25 @@ if ( ! defined( 'BLG_PLUGIN_VERSION' ) ) {
 
 function blg_github_token() {
     $token = defined( 'BOOK_LIBRARY_GRID_GITHUB_TOKEN' ) ? BOOK_LIBRARY_GRID_GITHUB_TOKEN : '';
-    return apply_filters( 'blg_github_token', $token );
+    $token = apply_filters( 'blg_github_token', $token );
+    return is_string( $token ) ? trim( $token ) : '';
+}
+
+/**
+ * GitHub API headers. The repository is public, so the token is optional: it
+ * only raises the API rate limit (or restores access if the repository goes
+ * private) and is sent to api.github.com only.
+ */
+function blg_github_headers( $token, $accept ) {
+    $headers = array(
+        'Accept'               => $accept,
+        'X-GitHub-Api-Version' => '2022-11-28',
+        'User-Agent'           => 'book-library-grid/' . BLG_PLUGIN_VERSION,
+    );
+    if ( '' !== $token ) {
+        $headers['Authorization'] = 'Bearer ' . $token;
+    }
+    return $headers;
 }
 
 function blg_latest_github_release( $token ) {
@@ -21,12 +39,7 @@ function blg_latest_github_release( $token ) {
         'https://api.github.com/repos/kiritoshiro/wp-book-library/releases/latest',
         array(
             'timeout' => 15,
-            'headers' => array(
-                'Accept'               => 'application/vnd.github+json',
-                'Authorization'        => 'Bearer ' . $token,
-                'X-GitHub-Api-Version' => '2022-11-28',
-                'User-Agent'           => 'book-library-grid/' . BLG_PLUGIN_VERSION,
-            ),
+            'headers' => blg_github_headers( $token, 'application/vnd.github+json' ),
         )
     );
 
@@ -43,12 +56,7 @@ function blg_check_for_plugin_update( $transient ) {
         return $transient;
     }
 
-    $token = blg_github_token();
-    if ( ! is_string( $token ) || '' === trim( $token ) ) {
-        return $transient;
-    }
-
-    $release = blg_latest_github_release( trim( $token ) );
+    $release = blg_latest_github_release( blg_github_token() );
     if ( ! $release || empty( $release['tag_name'] ) || empty( $release['assets'] ) || ! is_array( $release['assets'] ) ) {
         return $transient;
     }
@@ -109,21 +117,13 @@ function blg_download_private_release_asset( $reply, $package, $upgrader, $hook_
     }
 
     $token = blg_github_token();
-    if ( ! is_string( $token ) || '' === trim( $token ) ) {
-        return new WP_Error( 'blg_missing_github_token', __( 'Add BOOK_LIBRARY_GRID_GITHUB_TOKEN to wp-config.php to download plugin updates.', 'book-library-grid' ) );
-    }
 
     $response = wp_remote_get(
         $package,
         array(
             'timeout'     => 30,
             'redirection' => 0,
-            'headers'     => array(
-                'Accept'               => 'application/octet-stream',
-                'Authorization'        => 'Bearer ' . trim( $token ),
-                'X-GitHub-Api-Version' => '2022-11-28',
-                'User-Agent'           => 'book-library-grid/' . BLG_PLUGIN_VERSION,
-            ),
+            'headers'     => blg_github_headers( $token, 'application/octet-stream' ),
         )
     );
 

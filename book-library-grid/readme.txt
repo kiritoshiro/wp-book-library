@@ -20,9 +20,9 @@ Add the shortcode [book_library] to a page or post.
 2. Add [book_library] to a page or post.
 3. Add books and their attachments in the Books menu.
 
-== Private GitHub updates ==
+== GitHub updates ==
 
-The updater reads releases from the private kiritoshiro/wp-book-library repository. Create a fine-grained GitHub personal access token scoped to this repository with Contents: Read-only permission. In wp-config.php, above the “That's all, stop editing” line, define:
+The updater reads releases from the public kiritoshiro/wp-book-library repository; no token is needed. Optionally, to raise the GitHub API rate limit (or if the repository becomes private), create a fine-grained GitHub personal access token scoped to this repository with Contents: Read-only permission. In wp-config.php, above the “That's all, stop editing” line, define:
 
     define( 'BOOK_LIBRARY_GRID_GITHUB_TOKEN', 'github_pat_REPLACE_WITH_READ_ONLY_TOKEN' );
 
