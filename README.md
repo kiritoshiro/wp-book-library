@@ -6,17 +6,17 @@ WordPress plugin for a responsive book grid with book covers, popup descriptions
 
 Upload the book-library-grid.zip release asset in Plugins → Add New → Upload Plugin, then activate Book Library Grid (Advanced). Add [book_library] to a page or post.
 
-## Enable updates from this private repository
+## Updates from GitHub Releases
 
-The updater reads the latest published GitHub Release. Because this repository is private, each WordPress site needs a fine-grained GitHub token limited to this repository with Contents: Read-only permission.
+The updater reads the latest published GitHub Release. This repository is public, so no token is needed.
 
-Add this to wp-config.php above the “That's all, stop editing” line:
+A token is optional. A fine-grained GitHub token limited to this repository with Contents: Read-only permission raises the GitHub API rate limit, and is required again only if the repository becomes private. Add it to wp-config.php above the “That's all, stop editing” line:
 
     define( 'BOOK_LIBRARY_GRID_GITHUB_TOKEN', 'github_pat_REPLACE_WITH_READ_ONLY_TOKEN' );
 
 Keep the real token on the WordPress server. Do not commit it to this repository, add it to plugin source, or save it in a WordPress option.
 
-Version 2.0 did not include the updater. Install version 2.0.1 once manually; later published releases will appear under Dashboard → Updates after the token is configured.
+Version 2.0 did not include the updater. Install version 2.0.1 once manually; later published releases will appear under Dashboard → Updates.
 
 ## Publish a release
 
