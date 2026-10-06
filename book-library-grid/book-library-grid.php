@@ -2,7 +2,7 @@
 /*
 Plugin Name: Book Library Grid (Advanced)
 Description: Books library with cover selection, multiple audio tracks, multiple PDFs, and responsive popup grid.
-Version: 2.0.1
+Version: 2.0.2
 Requires at least: 5.8
 Requires PHP: 7.4
 Update URI: https://github.com/kiritoshiro/wp-book-library
