@@ -1,0 +1,15 @@
+{
+  "mounts": [
+    {
+      "host": "book-library-grid",
+      "vfs": "/wordpress/wp-content/plugins/book-library-grid"
+    }
+  ],
+  "plugins": [
+    "book-library-grid/book-library-grid.php"
+  ],
+  "watch": [
+    "/wordpress/wp-content/plugins/book-library-grid/"
+  ],
+  "fixture": "<!-- wp:shortcode -->[book_library]<!-- /wp:shortcode -->"
+}
