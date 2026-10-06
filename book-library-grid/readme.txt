@@ -3,7 +3,7 @@ Contributors: custom
 Tags: books, library, grid, audio, pdf
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 
 Books library with cover selection, multiple audio tracks, multiple PDFs, and a responsive popup grid.
@@ -31,6 +31,11 @@ Keep the real token on the WordPress server. Do not commit it to the repository 
 The original 2.0 release does not include the updater. Install 2.0.1 manually first. Later releases are offered in Dashboard → Updates.
 
 == Changelog ==
+
+= 2.0.2 =
+* Security: book descriptions are filtered with wp_kses_post before shortcodes are expanded, and saved links and cover, audio and PDF URLs are stored as URLs (esc_url_raw).
+* Hardening: the book editor checks the type of every submitted value and escapes the row indexes it prints.
+* The GitHub updater token is optional; it only raises the API rate limit.
 
 = 2.0.1 =
 * Add private GitHub Releases updates and token setup instructions.
