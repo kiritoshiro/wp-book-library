@@ -159,6 +159,6 @@ function blg_download_private_release_asset( $reply, $package, $upgrader, $hook_
         return $temp_file;
     }
 
-    return new WP_Error( 'blg_github_download_failed', sprintf( __( 'GitHub could not provide the plugin package (HTTP %d).', 'book-library-grid' ), absint( $status ) ) );
+    return new WP_Error( 'blg_github_download_failed', sprintf( /* translators: %d: HTTP status code */ __( 'GitHub could not provide the plugin package (HTTP %d).', 'book-library-grid' ), absint( $status ) ) );
 }
 add_filter( 'upgrader_pre_download', 'blg_download_private_release_asset', 10, 4 );
