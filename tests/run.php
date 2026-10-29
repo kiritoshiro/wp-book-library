@@ -7,6 +7,8 @@
  * Run: php tests/run.php
  */
 define( 'ABSPATH', __DIR__ );
+// A configured token: it must reach api.github.com and never the signed CDN URL.
+define( 'BOOK_LIBRARY_GRID_GITHUB_TOKEN', 'test-token' );
 
 /* ---- WordPress stubs */
 $GLOBALS['hooks']   = array();
@@ -40,7 +42,7 @@ function do_shortcode( $v ) { return $v; }
 function wpautop( $v ) { return '<p>' . $v . '</p>'; }
 function wp_reset_postdata() { $GLOBALS['current'] = null; }
 function wp_tempnam( $name ) { return $GLOBALS['temp_files'][] = tempnam( sys_get_temp_dir(), 'blg' ); }
-function wp_delete_file( $file ) { if ( file_exists( $file ) ) { unlink( $file ); } }
+function wp_delete_file( $file ) { if ( is_string( $file ) && file_exists( $file ) ) { unlink( $file ); } }
 
 /* Books: id => title, content, password lock and meta. */
 class WP_Query {
@@ -207,8 +209,11 @@ function blg_test_download( $asset_meta, $cdn_status, $cdn_body, $location = nul
 
 $file = blg_test_download( $asset, 200, $zip );
 check( is_string( $file ) && is_file( $file ) && $zip === file_get_contents( $file ), 'package matching its digest is installed' );
+$api_requests = array_values( array_filter( $GLOBALS['http'], function ( $r ) { return 0 === strpos( $r['url'], 'https://api.github.com/' ); } ) );
 $cdn_requests = array_values( array_filter( $GLOBALS['http'], function ( $r ) use ( $cdn_url ) { return $cdn_url === $r['url']; } ) );
-check( $cdn_requests && empty( $cdn_requests[0]['args']['headers']['Authorization'] ), 'signed CDN download is fetched without the GitHub token' );
+check( 2 === count( $api_requests ) && 2 === count( array_filter( $api_requests, function ( $r ) { return 'Bearer test-token' === ( $r['args']['headers']['Authorization'] ?? null ); } ) ), 'configured token is sent to api.github.com (metadata and asset requests)' );
+check( 1 === count( $cdn_requests ) && ! isset( $cdn_requests[0]['args']['headers'] ), 'signed CDN download is fetched without the GitHub token or API headers' );
+check( false === strpos( json_encode( $cdn_requests ), 'test-token' ), 'GitHub token appears nowhere in the CDN request' );
 if ( is_string( $file ) && is_file( $file ) ) {
     unlink( $file );
 }
@@ -232,7 +237,7 @@ check( blg_test_download( $asset, 200, $zip, 'https://evil.test/book-library-gri
 check( false === blg_test_download( $asset, 200, $zip, null, 'https://example.test/book-library-grid.zip' ), 'packages of other plugins are left to WordPress' );
 
 foreach ( $GLOBALS['temp_files'] as $temp ) {
-    if ( file_exists( $temp ) ) {
+    if ( is_string( $temp ) && file_exists( $temp ) ) {
         unlink( $temp );
     }
 }
