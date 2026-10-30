@@ -11,6 +11,9 @@ if ( ! defined( 'BLG_PLUGIN_VERSION' ) ) {
     define( 'BLG_PLUGIN_VERSION', '2.0.2' );
 }
 
+// The release ZIP is about 10 KB; anything far larger is not ours.
+define( 'BLG_MAX_PACKAGE_SIZE', 10 * 1024 * 1024 );
+
 function blg_github_token() {
     $token = defined( 'BOOK_LIBRARY_GRID_GITHUB_TOKEN' ) ? BOOK_LIBRARY_GRID_GITHUB_TOKEN : '';
     $token = apply_filters( 'blg_github_token', $token );
@@ -38,8 +41,10 @@ function blg_latest_github_release( $token ) {
     $response = wp_remote_get(
         'https://api.github.com/repos/kiritoshiro/wp-book-library/releases/latest',
         array(
-            'timeout' => 15,
-            'headers' => blg_github_headers( $token, 'application/vnd.github+json' ),
+            'timeout'             => 15,
+            'redirection'         => 0,
+            'limit_response_size' => 1000000,
+            'headers'             => blg_github_headers( $token, 'application/vnd.github+json' ),
         )
     );
 
@@ -49,6 +54,54 @@ function blg_latest_github_release( $token ) {
 
     $release = json_decode( wp_remote_retrieve_body( $response ), true );
     return is_array( $release ) ? $release : false;
+}
+
+/**
+ * Returns the ZIP asset's id, size and SHA-256 hex digest, or false. GitHub
+ * computes the "sha256:..." digest of every uploaded release asset; an asset
+ * without one is never offered or installed.
+ */
+function blg_verified_release_asset( $asset, $expected_id = 0 ) {
+    if ( ! is_array( $asset ) || 'book-library-grid.zip' !== ( $asset['name'] ?? null ) ) {
+        return false;
+    }
+
+    $id     = $asset['id'] ?? 0;
+    $size   = $asset['size'] ?? 0;
+    $digest = $asset['digest'] ?? null;
+    if (
+        ! is_int( $id ) || $id < 1 || ( $expected_id && $expected_id !== $id ) ||
+        ( isset( $asset['state'] ) && 'uploaded' !== $asset['state'] ) ||
+        ! is_int( $size ) || $size < 1 || $size > BLG_MAX_PACKAGE_SIZE ||
+        ! is_string( $digest ) || ! preg_match( '/^sha256:[a-f0-9]{64}$/D', $digest )
+    ) {
+        return false;
+    }
+
+    return array(
+        'id'     => $id,
+        'size'   => $size,
+        'digest' => substr( $digest, 7 ),
+    );
+}
+
+/** Reads one release asset's metadata (including its digest) from the GitHub API. */
+function blg_github_release_asset( $asset_id, $token ) {
+    $response = wp_remote_get(
+        'https://api.github.com/repos/kiritoshiro/wp-book-library/releases/assets/' . $asset_id,
+        array(
+            'timeout'             => 15,
+            'redirection'         => 0,
+            'limit_response_size' => 100000,
+            'headers'             => blg_github_headers( $token, 'application/vnd.github+json' ),
+        )
+    );
+
+    if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+        return false;
+    }
+
+    return blg_verified_release_asset( json_decode( wp_remote_retrieve_body( $response ), true ), $asset_id );
 }
 
 function blg_check_for_plugin_update( $transient ) {
@@ -66,17 +119,19 @@ function blg_check_for_plugin_update( $transient ) {
         return $transient;
     }
 
-    $asset_id = 0;
-    foreach ( $release['assets'] as $asset ) {
-        if ( isset( $asset['name'], $asset['id'] ) && 'book-library-grid.zip' === $asset['name'] ) {
-            $asset_id = absint( $asset['id'] );
+    $asset = false;
+    foreach ( $release['assets'] as $candidate ) {
+        if ( is_array( $candidate ) && 'book-library-grid.zip' === ( $candidate['name'] ?? null ) ) {
+            $asset = blg_verified_release_asset( $candidate );
             break;
         }
     }
 
-    if ( ! $asset_id ) {
+    // No ZIP, or a ZIP without a SHA-256 digest: offer no update.
+    if ( ! $asset ) {
         return $transient;
     }
+    $asset_id = $asset['id'];
 
     $plugin_file = plugin_basename( dirname( __FILE__ ) . '/book-library-grid.php' );
     $transient->response[ $plugin_file ] = (object) array(
@@ -91,14 +146,17 @@ function blg_check_for_plugin_update( $transient ) {
 }
 add_filter( 'pre_set_site_transient_update_plugins', 'blg_check_for_plugin_update' );
 
+/**
+ * GitHub redirects the asset API URL to a short-lived signed URL on one of
+ * these hosts. Other githubusercontent.com hosts (for example
+ * raw.githubusercontent.com) serve user-controlled content and are refused.
+ */
 function blg_is_github_release_asset_url( $url ) {
-    $parts = wp_parse_url( $url );
-    if ( empty( $parts['scheme'] ) || 'https' !== strtolower( $parts['scheme'] ) || empty( $parts['host'] ) ) {
-        return false;
-    }
-
-    $host = strtolower( $parts['host'] );
-    return 'githubusercontent.com' === $host || (bool) preg_match( '/\.githubusercontent\.com$/', $host );
+    $parts = is_string( $url ) ? wp_parse_url( $url ) : false;
+    return is_array( $parts ) &&
+        'https' === strtolower( $parts['scheme'] ?? '' ) &&
+        in_array( strtolower( $parts['host'] ?? '' ), array( 'release-assets.githubusercontent.com', 'objects.githubusercontent.com' ), true ) &&
+        ! isset( $parts['user'] ) && ! isset( $parts['pass'] ) && ! isset( $parts['port'] );
 }
 
 function blg_download_private_release_asset( $reply, $package, $upgrader, $hook_extra ) {
@@ -110,55 +168,66 @@ function blg_download_private_release_asset( $reply, $package, $upgrader, $hook_
     if (
         empty( $parts['scheme'] ) || 'https' !== strtolower( $parts['scheme'] ) ||
         empty( $parts['host'] ) || 'api.github.com' !== strtolower( $parts['host'] ) ||
-        empty( $parts['path'] ) ||
-        ! preg_match( '#^/repos/kiritoshiro/wp-book-library/releases/assets/[1-9][0-9]*$#', $parts['path'] )
+        empty( $parts['path'] ) || isset( $parts['query'] ) ||
+        ! preg_match( '#^/repos/kiritoshiro/wp-book-library/releases/assets/([1-9][0-9]*)$#D', $parts['path'], $matches )
     ) {
         return $reply;
     }
 
     $token = blg_github_token();
 
-    $response = wp_remote_get(
-        $package,
-        array(
-            'timeout'     => 30,
-            'redirection' => 0,
-            'headers'     => blg_github_headers( $token, 'application/octet-stream' ),
-        )
-    );
-
-    if ( is_wp_error( $response ) ) {
-        return $response;
+    // The SHA-256 digest is mandatory: without one the update is refused.
+    $asset = blg_github_release_asset( (int) $matches[1], $token );
+    if ( ! $asset ) {
+        return new WP_Error( 'blg_release_unverified', __( 'The plugin package could not be verified: GitHub did not provide its SHA-256 digest.', 'book-library-grid' ) );
     }
 
-    $status = wp_remote_retrieve_response_code( $response );
-    if ( in_array( $status, array( 301, 302, 303, 307, 308 ), true ) ) {
+    $temp_file = wp_tempnam( 'book-library-grid.zip' );
+    if ( ! $temp_file ) {
+        return new WP_Error( 'blg_save_download_failed', __( 'The plugin package could not be saved to a temporary file.', 'book-library-grid' ) );
+    }
+
+    $options = array(
+        'timeout'             => 300,
+        'redirection'         => 0,
+        'reject_unsafe_urls'  => true,
+        'stream'              => true,
+        'filename'            => $temp_file,
+        'limit_response_size' => $asset['size'] + 1,
+        'headers'             => blg_github_headers( $token, 'application/octet-stream' ),
+    );
+    $response = wp_remote_get( $package, $options );
+
+    if ( ! is_wp_error( $response ) && in_array( wp_remote_retrieve_response_code( $response ), array( 301, 302, 303, 307, 308 ), true ) ) {
         $download_url = wp_remote_retrieve_header( $response, 'location' );
-        if ( ! $download_url || ! blg_is_github_release_asset_url( $download_url ) ) {
+        if ( ! blg_is_github_release_asset_url( $download_url ) ) {
+            wp_delete_file( $temp_file );
             return new WP_Error( 'blg_invalid_download_url', __( 'GitHub returned an unexpected plugin download URL.', 'book-library-grid' ) );
         }
 
         // The temporary signed asset URL is fetched without the GitHub token.
-        return download_url( $download_url, 300 );
+        unset( $options['headers'] );
+        $response = wp_remote_get( $download_url, $options );
     }
 
-    if ( 200 === $status ) {
-        $body = wp_remote_retrieve_body( $response );
-        if ( '' === $body ) {
-            return new WP_Error( 'blg_empty_download', __( 'GitHub returned an empty plugin package.', 'book-library-grid' ) );
-        }
-
-        $temp_file = wp_tempnam( 'book-library-grid.zip' );
-        if ( ! $temp_file || false === file_put_contents( $temp_file, $body ) ) {
-            if ( $temp_file && file_exists( $temp_file ) ) {
-                unlink( $temp_file );
-            }
-            return new WP_Error( 'blg_save_download_failed', __( 'The plugin package could not be saved to a temporary file.', 'book-library-grid' ) );
-        }
-
-        return $temp_file;
+    if ( is_wp_error( $response ) ) {
+        wp_delete_file( $temp_file );
+        return $response;
     }
 
-    return new WP_Error( 'blg_github_download_failed', sprintf( /* translators: %d: HTTP status code */ __( 'GitHub could not provide the plugin package (HTTP %d).', 'book-library-grid' ), absint( $status ) ) );
+    $status = wp_remote_retrieve_response_code( $response );
+    if ( 200 !== $status ) {
+        wp_delete_file( $temp_file );
+        return new WP_Error( 'blg_github_download_failed', sprintf( /* translators: %d: HTTP status code */ __( 'GitHub could not provide the plugin package (HTTP %d).', 'book-library-grid' ), absint( $status ) ) );
+    }
+
+    clearstatcache( true, $temp_file );
+    $digest = hash_file( 'sha256', $temp_file );
+    if ( filesize( $temp_file ) !== $asset['size'] || ! is_string( $digest ) || ! hash_equals( $asset['digest'], $digest ) ) {
+        wp_delete_file( $temp_file );
+        return new WP_Error( 'blg_package_digest_mismatch', __( 'The plugin package does not match its SHA-256 digest from GitHub.', 'book-library-grid' ) );
+    }
+
+    return $temp_file;
 }
 add_filter( 'upgrader_pre_download', 'blg_download_private_release_asset', 10, 4 );

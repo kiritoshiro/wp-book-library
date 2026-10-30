@@ -32,6 +32,10 @@ The original 2.0 release does not include the updater. Install 2.0.1 manually fi
 
 == Changelog ==
 
+= Unreleased =
+* Security: the [book_library] shortcode no longer prints the book, PDF or audio links of a password-protected book until the visitor enters its password; the popup shows the WordPress password form instead of the description.
+* Security: the GitHub updater requires the SHA-256 digest GitHub publishes for the release ZIP. It offers no update without one and refuses a download that does not match it; the download redirect is accepted only to GitHub's release-asset hosts.
+
 = 2.0.2 =
 * Security: book descriptions are filtered with wp_kses_post before shortcodes are expanded, and saved links and cover, audio and PDF URLs are stored as URLs (esc_url_raw).
 * Hardening: the book editor checks the type of every submitted value and escapes the row indexes it prints.

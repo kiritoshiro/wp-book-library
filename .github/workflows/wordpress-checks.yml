@@ -9,6 +9,20 @@ permissions:
   contents: read
 
 jobs:
+  standalone-tests:
+    name: Standalone tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # tests/run.php stubs WordPress: protected-book links and the updater's
+      # mandatory SHA-256 digest. Uses the runner's preinstalled PHP.
+      - name: Run tests/run.php
+        run: php tests/run.php
+
   plugin-check:
     name: Plugin Check (${{ matrix.slug }})
     runs-on: ubuntu-latest

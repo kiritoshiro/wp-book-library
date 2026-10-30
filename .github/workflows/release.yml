@@ -57,6 +57,9 @@ jobs:
           [ "$version" = "$stable_tag" ] || { echo "Plugin header and Stable tag versions differ."; exit 1; }
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
+      - name: Run standalone tests
+        run: php tests/run.php
+
       - name: Package plugin
         run: |
           set -eu
@@ -80,3 +83,20 @@ jobs:
           else
             gh release create "$tag" book-library-grid.zip --title "$tag" --generate-notes
           fi
+
+      # The plugin updater installs only a ZIP whose SHA-256 matches the
+      # "digest" GitHub reports for the release asset. GitHub computes it on
+      # upload; fail here if it is missing or differs from the built file.
+      - name: Check the published SHA-256 digest
+        env:
+          RELEASE_TAG_INPUT: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          tag="$GITHUB_REF_NAME"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            tag="$RELEASE_TAG_INPUT"
+          fi
+          expected="sha256:$(sha256sum book-library-grid.zip | cut -d ' ' -f 1)"
+          actual="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --jq '.assets[] | select(.name == "book-library-grid.zip") | .digest')"
+          [ "$actual" = "$expected" ] || { echo "Release asset digest '$actual' does not match the built ZIP ($expected); the updater would refuse it."; exit 1; }

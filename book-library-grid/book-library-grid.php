@@ -375,16 +375,21 @@ function blg_shortcode_display( $atts ) {
             $title = get_the_title();
             $description = get_the_content();
 
+            // A password-protected book keeps its cover and title in the grid, but its
+            // popup shows the password form instead of the description, and the book,
+            // PDF and audio links stay out of the page until the visitor enters the password.
+            $locked = post_password_required( $post_id );
+
             // Get Meta
-            $main_link    = get_post_meta( $post_id, '_blg_main_link', true );
+            $main_link    = $locked ? '' : get_post_meta( $post_id, '_blg_main_link', true );
             $custom_cover = get_post_meta( $post_id, '_blg_custom_cover', true );
             $feat_img     = get_the_post_thumbnail_url( $post_id, 'full' );
 
             // Determine Cover Image: Custom > Featured > Placeholder
             $cover_url = $custom_cover ? $custom_cover : $feat_img;
 
-            $audios = get_post_meta( $post_id, '_blg_audios', true );
-            $pdfs   = get_post_meta( $post_id, '_blg_pdfs', true );
+            $audios = $locked ? array() : get_post_meta( $post_id, '_blg_audios', true );
+            $pdfs   = $locked ? array() : get_post_meta( $post_id, '_blg_pdfs', true );
 
             $unique_id = 'book-' . $post_id;
             $popup_id  = 'popup-' . $unique_id;
@@ -420,9 +425,14 @@ function blg_shortcode_display( $atts ) {
 
                         <div class="popup-text">
                             <?php
-                            // Filter the stored description before expanding shortcodes: filtering afterwards
-                            // would strip <source>/<iframe> from core audio, video and embed shortcode output.
-                            echo wpautop( do_shortcode( wp_kses_post( $description ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            if ( $locked ) {
+                                // Core's password form (its values are escaped by WordPress). Kses would strip its inputs.
+                                echo get_the_password_form( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            } else {
+                                // Filter the stored description before expanding shortcodes: filtering afterwards
+                                // would strip <source>/<iframe> from core audio, video and embed shortcode output.
+                                echo wpautop( do_shortcode( wp_kses_post( $description ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            }
                             ?>
                         </div>
 

@@ -8,7 +8,7 @@ Upload the book-library-grid.zip release asset in Plugins → Add New → Upload
 
 ## Updates from GitHub Releases
 
-The updater reads the latest published GitHub Release. This repository is public, so no token is needed.
+The updater reads the latest published GitHub Release. This repository is public, so no token is needed. It installs book-library-grid.zip only if the file matches the SHA-256 digest GitHub reports for that release asset; without a digest, no update is offered.
 
 A token is optional. A fine-grained GitHub token limited to this repository with Contents: Read-only permission raises the GitHub API rate limit, and is required again only if the repository becomes private. Add it to wp-config.php above the “That's all, stop editing” line:
 
