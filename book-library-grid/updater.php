@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'BLG_PLUGIN_VERSION' ) ) {
-    define( 'BLG_PLUGIN_VERSION', '2.0.2' );
+    define( 'BLG_PLUGIN_VERSION', '2.0.3' );
 }
 
 // The release ZIP is about 10 KB; anything far larger is not ours.
