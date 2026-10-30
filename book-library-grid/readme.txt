@@ -3,7 +3,7 @@ Contributors: custom
 Tags: books, library, grid, audio, pdf
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 
 Books library with cover selection, multiple audio tracks, multiple PDFs, and a responsive popup grid.
@@ -32,7 +32,7 @@ The original 2.0 release does not include the updater. Install 2.0.1 manually fi
 
 == Changelog ==
 
-= Unreleased =
+= 2.0.3 =
 * Security: the [book_library] shortcode no longer prints the book, PDF or audio links of a password-protected book until the visitor enters its password; the popup shows the WordPress password form instead of the description.
 * Security: the GitHub updater requires the SHA-256 digest GitHub publishes for the release ZIP. It offers no update without one and refuses a download that does not match it; the download redirect is accepted only to GitHub's release-asset hosts.
 
